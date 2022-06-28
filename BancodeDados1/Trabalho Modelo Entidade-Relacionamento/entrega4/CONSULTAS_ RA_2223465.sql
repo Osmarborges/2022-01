@@ -11,18 +11,19 @@ ou
 -- 1 - Listar ID de cliente juridico que pediu 80 litros.
 Select P.ID_CLI
 From  PEDIDO AS P
-WHERE P.QUANTIDADE = 80 AND
+WHERE P.QUANTIDADE < 100 AND
 P.ID_CLI IN (SELECT C.ID_CLI
 					FROM CLIENTE C, cliente_juridico CJ
-                    WHERE C.ID_CLI = CJ.ID_CLI );
-                                      
+                    WHERE C.ID_CLI = CJ.ID_CLI) 
+                    group by QUANTIDADE;
 
 -- 2 -  Listar os ids dos clientes que pediram 20, 30 ou 100 litros de chopp
 Select C.ID_CLI
 FROM CLIENTE C
 Where ID_CLI IN (Select ID_CLI
 					From Pedido
-					Where QUANTIDADE IN (20, 30, 100));
+					Where QUANTIDADE IN (20, 30, 100)
+                    group by quantidade);
 -- 3 - Listar todos os clientes que realizaram pedidos com barril maior que 15 litros ou contendo algum produto de preço MAIOR que R$ 100
 
 (Select C.NOME
@@ -63,14 +64,15 @@ INNER JOIN PEDIDO_TEM_PRODUTO AS PTP ON
  PB.TIPO_DESCRICAO = CH.TIPO_DESCRICAO ) AS RESULTADO 
  group by RESULTADO.LITRO ORDER BY BARRIL_ID ;
  
- -- 5 - liste os pedidos feitos no dia 20/06/2002 com quantidade maior que 30 litros e o nome dos clientes
+ -- 5 - liste os pedidos feitos após 20/06/2002, com quantidade maior que 30 litros e o nome dos clientes
  SELECT DATAS.DATA_PED AS DIA, DATAS.ID_CLI AS ID_CLIENTE, DATAS.NOME
  FROM (SELECT DATA_PED, P.ID_CLI, C.NOME
-	 FROM PEDIDO P, CLIENTE C
-	 WHERE  P.ID_CLI = C.ID_CLI AND
-     P.DATA_PED = '2002-06-20' AND
-			P.QUANTIDADE > 30) AS DATAS; 
- 
+		 FROM PEDIDO P, CLIENTE C
+		 WHERE  P.ID_CLI = C.ID_CLI AND
+		 P.DATA_PED > '2002-06-20' AND
+		 P.QUANTIDADE > 30) AS DATAS
+         GROUP BY DIA; 
+
 -- 6 -  liste o preço do litro de chopp presente nos barris dos pedidos feitos e o id dos clientes e o valor total do pedido
 SELECT RESULTADO.LITRO, RESULTADO.ID_CLIENTE , (RESULTADO.LITRO*RESULTADO.QUANTIDADE) AS TOTAL
 FROM ( SELECT P.ID_PED AS ID_CLIENTE, CH.VALOR_LITRO AS LITRO, P.QUANTIDADE
@@ -90,28 +92,30 @@ WHERE P.ID_CLI IN (SELECT C.ID_CLI
 					FROM CLIENTE C, cliente_juridico CJ
                     WHERE C.ID_CLI = CJ.ID_CLI ); 
 
--- 8 - Liste o id os pedidos entregues pelo funcionario idair                     
-SELECT ID_PED
-FROM PEDIDO AS P
-WHERE P.CRACHA_ENTREGADOR IN (SELECT FC.CRACHA
+-- 8 - Liste o id do pedido, cracha e nome do entregador que nao seja idair                     
+SELECT ID_PED, p.cracha_entregador, F.NOME
+FROM PEDIDO AS P, FUNCIONARIO F
+WHERE P.CRACHA_ENTREGADOR = F.CRACHA AND  
+	P.CRACHA_ENTREGADOR not IN (SELECT FC.CRACHA
 								FROM FUNC_ENTREGADOR AS FC, FUNCIONARIO AS F
                                 WHERE FC.CRACHA = F.CRACHA AND
 								F.NOME LIKE '%IDAIR%');
                                 
--- 9 - liste o id e a data do pedido em que a maquina de 3 torneiras foi usada 
-SELECT ID_PED, DATA_PED 
+-- 9 - liste o ids e a data dos pedido em que a maquina de 1 ou 2 torneiras foi usada 
+(SELECT ID_PED, DATA_PED  
 FROM PEDIDO P
 Where P.ID_PED IN (SELECT PTP.ID_PED 
 			FROM PRODUTO PROD , PEDIDO_TEM_PRODUTO PTP, PRODUTO_MAQUINA PM
             WHERE PTP.ID_PROD = PROD.ID_PROD AND
 			PROD.ID_PROD = PM.ID_PROD AND
-            PM.NRO_TORNEIRAS = 3);
+            PM.NRO_TORNEIRAS IN (1,2)
+            GROUP BY NRO_TORNEIRAS));
             
--- 10 - liste a marca dos produtos que foram usado no pedido de id 8
+-- 10 - liste a marca dos produtos que foram usado no pedido do
 SELECT DISTINCT MARCA
 FROM PRODUTO AS PROD 
 WHERE PROD.ID_PROD IN (SELECT PTP.ID_PROD
 						FROM PEDIDO_TEM_PRODUTO PTP
                         WHERE PTP.ID_PED IN(SELECT P.ID_PED
 											FROM PEDIDO P
-                                            WHERE P.ID_PED = 8));
+                                            WHERE P.DATA_PED > '2002-06-20'));
