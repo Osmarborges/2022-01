@@ -1,0 +1,103 @@
+
+
+2-
+CREATE TABLE EntidadeA (
+
+  Atributo_a1 integer primary key
+
+  Atributo_a2 integer integer
+
+); 
+
+3 - 
+CREATE TABLE EntidadeA (
+
+  Atributo_a1 integer primary key
+
+  Atributo_a2 integer,
+
+); 
+
+CREATE TABLE EntidadeB (
+
+  Atributo_b1 integer primary key
+
+  Atributo_b2 integer,
+
+); 
+
+CREATE TABLE A_Tem_B (
+
+  Atributo_a1 integer, 
+
+  Atributo_b1 integer,
+
+primary key (Atributo_a1,Atributo_b1),
+
+foreign key(Atributo_a1) references EntidadeA (Atributo_a1)
+
+foreign key ( Atributo_b1) references EntidadeB (Atributo_b1)
+
+); 
+
+CREATE TABLE EntidadeC (
+
+  Atributo_c1 integer primary key
+
+  Atributo_c2 integer,
+
+); 
+
+CREATE TABLE A_TEM_B_TEM_C (
+  Atributo_a1 integer 
+
+  Atributo_b1 integer
+
+  Atributo_c1 integer
+
+primary key (Atributo_a1, Atributo_b1, Atributo_c1),
+
+foreign key(Atributo_a1) references EntidadeA (Atributo_a1)
+
+foreign key ( Atributo_b1) references EntidadeB (Atributo_b1)
+
+foreign key ( Atributo_c1) references EntidadeC (Atributo_c1)
+);
+
+Está na 1FN?
+
+sim.
+
+Está na 2FN?
+
+não. há atributos que não dependem totalmente da chave 
+
+ELENCO(CodAtor, CodFilme, Papel)
+ATOR (CodAtor(fk), NomeAtor,  IdadeAtor)
+FILME ( CodFilme(fk), NomeFilme)
+Está na 3FN?
+sim. 
+
+
+
+)
+FN = (sem atributos compostos, multivalorados, relaçao dentro de relaçao)
+
+2 FN = (todos atributos dependem da chave)
+
+3 FN = (atributos nao dependentes de chaves dependendo de atributos nao chaves, dependencia
+
+
+1)select sum(M.tempo) from MUSICAS M
+  where m2.Artista like '%Bob Dylan%';
+
+2)select Album from CDS
+  where album not in (select Album from CDS
+                      where year (DataCompra) = 2020);
+
+3)select LocalCompra  from CDS
+  where year (DataCompra) = 2020 and
+   CDS.Codigo in (select m.Codigo from MUSICAS m
+                     where m.Artista like '%Bob Dylan%'
+                     group by  m.Codigo
+                     having m.Tempo > 5 );
